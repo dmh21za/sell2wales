@@ -10,7 +10,10 @@ class Reader:
     def hello():
         print('Hello World')
 
-    def parse_html(self, raw_html, page_date=None):
+    def parse_html(self):
+
+        raw_html = self.raw_html
+        page_date = self.page_date
 
         soup = BeautifulSoup(raw_html, "html.parser")
 
@@ -154,10 +157,7 @@ class Reader:
         }
 
     def generate_json(self):
-        parsed = self.parse_html(
-            self.raw_html,
-            page_date=self.page_date
-        )
+        parsed = self.parse_html()
 
         filename = f"{self.html_loc.split('.', 2)[0]}.json"
 
