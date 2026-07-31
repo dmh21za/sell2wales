@@ -152,22 +152,14 @@ class Reader:
             "total_results": total_results,
             "results": results
         }
-    
-    def __init__(self, html_loc: str):
 
-        with open(html_loc, "r", encoding="utf-8") as f:
-            raw_html = f.read()
-
-        page_date = datetime.now().strftime(
-            "%d/%m/%Y %H:%M:%S"
-        )
-
+    def generate_json_files(self):
         parsed = self.parse_html(
-            raw_html,
-            page_date=page_date
+            self.raw_html,
+            page_date=self.page_date
         )
 
-        filename = f"{html_loc.split('.', 2)[0]}.json"
+        filename = f"{self.html_loc.split('.', 2)[0]}.json"
 
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(
@@ -178,6 +170,18 @@ class Reader:
             )
 
         self.data = parsed
+
+    def __init__(self, html_loc: str):
+
+        with open(html_loc, "r", encoding="utf-8") as f:
+            raw_html = f.read()
+
+        self.html_loc = html_loc
+        self.page_date = datetime.now().strftime(
+            "%d/%m/%Y %H:%M:%S"
+        )
+        self.raw_html
+
 
 r = Reader('files/swansea/1.html')
 
