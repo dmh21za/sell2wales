@@ -174,10 +174,9 @@ class Reader:
     def __init__(self, html_loc: str):
 
         with open(html_loc, "r", encoding="utf-8") as f:
-            raw_html = f.read()
+            self.raw_html = f.read()
 
         self.html_loc = html_loc
         self.page_date = datetime.now().strftime(
             "%d/%m/%Y %H:%M:%S"
         )
-        self.raw_html
