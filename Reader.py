@@ -1,14 +1,17 @@
 
 from bs4 import BeautifulSoup
 import re
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, urljoin
 import json
+from datetime import datetime
+
 
 class Reader:
     def hello():
         print('Hello World')
 
-    def parse_html(self, raw_html):
+    def parse_html(self, raw_html, page_date=None):
+
         soup = BeautifulSoup(raw_html, "html.parser")
 
         #
@@ -16,113 +19,111 @@ class Reader:
         #
         location = None
 
-        action = soup.find("form")
+        form = soup.find("form")
 
-        if action and action.has_attr("action"):
-            # Example:
-            # ./Search_MainPage.aspx?noticeType=1&location=1018
-            qs = parse_qs(urlparse(action["action"]).query)
+        if form and form.has_attr("action"):
 
-            location_code = qs.get("location", [None])[0]
+            query_string = parse_qs(
+                urlparse(form["action"]).query
+            )
+
+            location_code = query_string.get(
+                "location",
+                [None]
+            )[0]
 
             if location_code:
+
                 for span in soup.select(
                     "#ctl00_MainBody_pickerLocations_uptPanel span.checkbox"
                 ):
+
                     if span.get("data-value") == location_code:
+
                         label = span.find("label")
+
                         if label:
-                            location = label.get_text(strip=True)
-                        break
-
-        #
-        # PAGE DATE
-        #
-        page_date = None
-
-        # Look for explicit save/generated dates
-        for meta in soup.find_all("meta"):
-            content = meta.get("content", "")
-            m = re.search(r"\d{2}/\d{2}/\d{4}", content)
-            if m:
-                page_date = m.group()
-                break
-
-        # fallback: newest publication date visible on page
-        if page_date is None:
-            pub_dates = []
-
-            for result in soup.select("div.search-result"):
-                for prop in result.select("div.notice-property"):
-                    label = prop.select_one("span.notice-refno")
-
-                    if (
-                        label
-                        and "Publication date" in label.get_text()
-                    ):
-                        spans = prop.find_all("span")
-                        if len(spans) >= 2:
-                            pub_dates.append(
-                                spans[1].get_text(strip=True)
+                            location = (
+                                label.get_text(strip=True)
+                                .lstrip(". ")
+                                .strip()
                             )
 
-            if pub_dates:
-                page_date = pub_dates[0]
+                        break
 
         #
         # TOTAL RESULTS
         #
         total_results = None
 
-        count_el = soup.select_one("span.results-num")
+        results_num = soup.select_one(
+            "span.results-num"
+        )
 
-        if count_el:
-            m = re.search(r"\d+", count_el.get_text())
-            if m:
-                total_results = int(m.group())
+        if results_num:
+
+            match = re.search(
+                r"\d+",
+                results_num.get_text()
+            )
+
+            if match:
+                total_results = int(
+                    match.group()
+                )
 
         #
         # RESULTS
         #
         results = []
 
-        for notice in soup.select("div.search-result"):
+        for notice in soup.select(
+            "div.search-result"
+        ):
 
-            #
-            # title
-            #
-            title_el = notice.select_one("a.notice-title")
-            title = (
-                title_el.get_text(" ", strip=True)
-                if title_el
-                else None
+            title_el = notice.select_one(
+                "a.notice-title"
             )
 
-            #
-            # id
-            #
-            notice_id = None
+            if not title_el:
+                continue
 
-            #
-            # deadline
-            #
+            title = title_el.get_text(
+                " ",
+                strip=True
+            )
+
+            url = urljoin(
+                "https://www.sell2wales.gov.wales/",
+                title_el.get("href", "")
+            )
+
+            notice_id = None
             deadline = None
 
-            for prop in notice.select("div.notice-property"):
+            for prop in notice.select(
+                "div.notice-property"
+            ):
 
-                label = prop.select_one("span.notice-refno")
+                label = prop.select_one(
+                    "span.notice-refno"
+                )
 
                 if not label:
                     continue
 
                 label_text = label.get_text(
-                    " ", strip=True
+                    " ",
+                    strip=True
                 )
 
                 spans = prop.find_all("span")
 
                 value = (
-                    spans[1].get_text(strip=True)
+                    spans[1].get_text(
+                        " ",
+                        strip=True
+                    )
                     if len(spans) > 1
                     else ""
                 )
@@ -134,43 +135,51 @@ class Reader:
                     deadline = value or None
 
             results.append(
-                (
-                    notice_id,
-                    title,
-                    deadline,
-                )
+                {
+                    "id": notice_id,
+                    "title": title,
+                    "url": url,
+                    "deadline": deadline
+                }
             )
 
-        return (
-            location,
-            page_date,
-            total_results,
-            results,
-        )
-        
-        """
-        Take location of post
-        @html_loc - location of the html file in question
-        """
-
+        #
+        # FINAL STRUCTURE
+        #
+        return {
+            "location": location,
+            "date": page_date,
+            "total_results": total_results,
+            "results": results
+        }
+    
     def __init__(self, html_loc: str):
-    
-            with open(html_loc, "r", encoding="utf-8") as f:
-                raw_html = f.read()
-    
-            parsed = self.parse_html(raw_html)
-    
-            with open("test.json", "w", encoding="utf-8") as f:
-                json.dump(
-                    parsed,
-                    f,
-                    indent=4,
-                    ensure_ascii=False
-                )
-    
-            self.data = parsed
+
+        with open(html_loc, "r", encoding="utf-8") as f:
+            raw_html = f.read()
+
+        page_date = datetime.now().strftime(
+            "%d/%m/%Y %H:%M:%S"
+        )
+
+        parsed = self.parse_html(
+            raw_html,
+            page_date=page_date
+        )
+
+        filename = f"{html_loc.split('.', 2)[0]}.json"
+
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(
+                parsed,
+                f,
+                indent=4,
+                ensure_ascii=False
+            )
+
+        self.data = parsed
 
 r = Reader('files/swansea/1.html')
 
 print('hello')
-    
+
