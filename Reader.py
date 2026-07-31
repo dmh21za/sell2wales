@@ -140,6 +140,7 @@ class Reader:
             results.append(
                 {
                     "id": notice_id,
+                    "date_obtained": self.page_date,
                     "title": title,
                     "url": url,
                     "deadline": deadline
@@ -151,7 +152,7 @@ class Reader:
         #
         return {
             "location": location,
-            "date": page_date,
+            "date_obtained": self.page_date,
             "total_results": total_results,
             "page_number": self.page_number,
             "results": results
