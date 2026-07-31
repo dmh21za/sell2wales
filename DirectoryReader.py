@@ -63,7 +63,3 @@ class DirectoryReader:
         )
 
         return df
-
-
-d = DirectoryReader('files/swansea')
-d.generate_dataframe()
