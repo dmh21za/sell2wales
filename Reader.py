@@ -181,9 +181,3 @@ class Reader:
             "%d/%m/%Y %H:%M:%S"
         )
         self.raw_html
-
-
-r = Reader('files/swansea/1.html')
-
-print('hello')
-
