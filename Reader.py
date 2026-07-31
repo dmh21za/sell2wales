@@ -153,7 +153,7 @@ class Reader:
             "results": results
         }
 
-    def generate_json_files(self):
+    def generate_json(self):
         parsed = self.parse_html(
             self.raw_html,
             page_date=self.page_date
