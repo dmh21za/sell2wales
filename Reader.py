@@ -153,6 +153,7 @@ class Reader:
             "location": location,
             "date": page_date,
             "total_results": total_results,
+            "page_number": self.page_number,
             "results": results
         }
 
@@ -176,6 +177,7 @@ class Reader:
         with open(html_loc, "r", encoding="utf-8") as f:
             self.raw_html = f.read()
 
+        self.page_number = html_loc.split('/')[-1].split('.html', 2)[0]
         self.html_loc = html_loc
         self.page_date = datetime.now().strftime(
             "%d/%m/%Y %H:%M:%S"
