@@ -34,13 +34,13 @@ class DirectoryReader:
             r = Reader(file_loc)
 
             data = r.parse_html()
-
             for result in data.get("results", []):
                 rows.append({
-                    "location": data.get("location"),
+                    "location": self.place_name,
                     "date_obtained": data.get("date_obtained"),
                     "page_number": data.get("page_number"),
                     "id": result.get("id"),
+                    "ocid": result.get("ocid"),
                     "title": result.get("title"),
                     "url": result.get("url"),
                     "deadline": result.get("deadline")
@@ -56,6 +56,7 @@ class DirectoryReader:
                 "date_obtained",
                 "page_number",
                 "id",
+                "ocid",
                 "title",
                 "url",
                 "deadline"
