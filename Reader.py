@@ -11,11 +11,10 @@ class Reader:
         print('Hello World')
 
     def parse_html(self):
-
-        raw_html = self.raw_html
-        page_date = self.page_date
-
-        soup = BeautifulSoup(raw_html, "html.parser")
+        soup = BeautifulSoup(
+            self.raw_html,
+            "html.parser"
+        )
 
         #
         # LOCATION
@@ -101,55 +100,64 @@ class Reader:
                 title_el.get("href", "")
             )
 
-            notice_id = None
-            deadline = None
+            #
+            # All properties
+            #
+            props = {}
 
             for prop in notice.select(
                 "div.notice-property"
             ):
 
-                label = prop.select_one(
-                    "span.notice-refno"
-                )
-
-                if not label:
-                    continue
-
-                label_text = label.get_text(
-                    " ",
-                    strip=True
-                )
-
                 spans = prop.find_all("span")
 
-                value = (
-                    spans[1].get_text(
-                        " ",
-                        strip=True
-                    )
-                    if len(spans) > 1
-                    else ""
+                if len(spans) < 2:
+                    continue
+
+                key = (
+                    spans[0]
+                    .get_text(" ", strip=True)
+                    .rstrip(":")
+                    .strip()
                 )
 
-                if "Reference no" in label_text:
-                    notice_id = value
+                value = (
+                    spans[1]
+                    .get_text(" ", strip=True)
+                    .strip()
+                )
 
-                elif "Deadline date" in label_text:
-                    deadline = value or None
+                props[key] = value
 
             results.append(
                 {
-                    "id": notice_id,
+                    "id": props.get(
+                        "Reference no"
+                    ),
+                    "ocid": props.get(
+                        "OCID"
+                    ),
                     "date_obtained": self.page_date,
                     "title": title,
                     "url": url,
-                    "deadline": deadline
+                    "deadline": props.get(
+                        "Deadline date"
+                    ),
+                    "publication_date": props.get(
+                        "Publication date"
+                    ),
+                    "notice_type": props.get(
+                        "Notice Type"
+                    ),
+                    "published_by": props.get(
+                        "Published by"
+                    ),
+                    "value": props.get(
+                        "Value"
+                    )
                 }
             )
 
-        #
-        # FINAL STRUCTURE
-        #
         return {
             "location": location,
             "date_obtained": self.page_date,
@@ -183,3 +191,6 @@ class Reader:
         self.page_date = datetime.now().strftime(
             "%d/%m/%Y %H:%M:%S"
         )
+
+r = Reader('files/swansea/1.html')
+r.parse_html()
