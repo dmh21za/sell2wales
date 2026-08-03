@@ -18,15 +18,15 @@ class DirectoryReader:
 
 
     def generate_json_for_all(self):
-        print(f"{len(self.html_files)} to read. ")
+        #print(f"{len(self.html_files)} to read. ")
         for index, file_loc in enumerate(self.html_files):
             r = Reader(file_loc)
             r.generate_json()
-            print(f"Done {index + 1} / {len(self.html_files)}.")
+            #print(f"Done {index + 1} / {len(self.html_files)}.")
 
 
     def generate_dataframe(self):
-        print(f"{len(self.html_files)} to read.")
+        #print(f"{len(self.html_files)} to read.")
 
         rows = []
 
@@ -46,7 +46,7 @@ class DirectoryReader:
                     "deadline": result.get("deadline")
                 })
 
-            print(f"Done {index + 1} / {len(self.html_files)}.")
+            #print(f"Done {index + 1} / {len(self.html_files)}.")
 
 
         df = pd.DataFrame(
